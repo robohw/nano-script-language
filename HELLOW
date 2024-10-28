@@ -1,0 +1,16 @@
+; THE S VAR IS PRESETTED (32)
+
+TRC
+B = 1
+.LOOP
+U = "HELLO WORLD!"
+PRN U T
+B +  
+IF B < 5 JMP .LOOP
+
+
+
+
+
+
+
