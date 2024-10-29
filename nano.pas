@@ -4,8 +4,12 @@ program nano6; // 24.10.28 v1.1 FINAL - KeyWords: INP, IF, JMP, RET, PRN, TRC
                // Vars:    A ARRAY    1
                //       B..Q longINT 16
                //          R random   1 
-               //       S,T char      2
+               //        S,T char     2
                //       U..Z string   6 
+
+               // USAGE: compile nano.pas 
+               // nano.exe your_script [ENTER]
+               // the result: your_script.out 
  uses SysUtils;  
      
  type                            // Proto, for LABELs. 
