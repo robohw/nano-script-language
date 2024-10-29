@@ -7,7 +7,7 @@ The language supports labels. The first character of these must be a dot ("."). 
 .MYLABEL
 B = B + 1
 PRN B
-MEADOW
+RET
 
 IF B < 10 JMP .MYLABEL
 
