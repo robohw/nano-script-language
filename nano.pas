@@ -7,15 +7,15 @@ program nano6; // 24.10.28 v1.1 FINAL - KeyWords: INP, IF, JMP, RET, PRN, TRC
                //        S,T char     2
                //       U..Z string   6 
 
-               // USAGE: compile nano.pas 
-               // nano.exe your_script [ENTER]
+               // USAGE: compile nano.pas (freepascal) to nano.exe  
+               // Type nano.exe your_script [ENTER]
                // the result: your_script.out 
  uses SysUtils;  
      
  type                            // Proto, for LABELs. 
    TLabel = record
      Name: string;               // name, and 
-     Addr: Word;                 // address (linenum)
+     Addr: Word;                 // address (line number)
  end;
    
  const
@@ -77,7 +77,7 @@ begin
   end;
 end;
  
- // SET LABEL and its ADDRESS
+ // SET a LABEL and its ADDRESS
  procedure SetLabelAddr(const Name: string; Addr: Word);
  var
    i: Integer;
@@ -241,7 +241,7 @@ end;
      else Write(OutFile,Chr(Varb[tokens[i][1]]));
  end;
  
- // EXECUTE
+ // EXECUTE a line
  procedure ExecuteMe;
  begin
    LineNum := 1;
@@ -281,7 +281,6 @@ end;
    end;
  end;
 
- // it LOADS THE SCRIPT
  procedure LoadProgram;
  var
    i: byte;
@@ -316,8 +315,7 @@ end;
    close(InFile);
  end;
  
- // for TRACE 
- procedure PrintState;
+ procedure PrintState;  // for TRACE 
  var
    i: Integer;
  begin
@@ -332,7 +330,7 @@ end;
      for i := 0 to length(Labels)-1 do Writeln(OutFile,Labels[i].Name, #9, Labels[i].Addr);
    end;  
    Writeln(OutFile);
-   Writeln(OutFile,'-------------- Vars (B..R):');
+   Writeln(OutFile,'-------------- Vars (B..Z):');
    for i := Ord('B') to Ord('R') do
        if Vars[Chr(i)] > -2147483648 then Writeln(OutFile,Chr(i), ' ', Vars[Chr(i)]); 
        Writeln(OutFile,'S', ' ', Varb['S']); 
@@ -351,10 +349,8 @@ end;
     reset(InFile);
     assign(OutFile,paramstr(1)+'.out');
     rewrite(OutFile);  
-   end
-   
+   end   
    else 
-   
    begin
     writeln(' no input file. Try: nano.exe your_script');
     halt(1); 
