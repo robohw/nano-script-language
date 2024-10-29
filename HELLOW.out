@@ -1,0 +1,23 @@
+HELLO WORLD!
+HELLO WORLD!
+HELLO WORLD!
+HELLO WORLD!
+
+-------------- (17 lines done) - Code:
+ 1  B = 1
+ 2  U = "HELLO WORLD!"
+ 3  PRN U T
+ 4  B +
+ 5  IF B < 5 JMP .LOOP
+
+-------------- Label(s):
+.LOOP	2
+
+-------------- Vars (B..R):
+B 5
+R 100
+S 32
+T 10
+U "HELLO WORLD!"
+-------------- Array element(s):
+A.0 = 0

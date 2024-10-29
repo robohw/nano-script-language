@@ -1,0 +1,10 @@
+; simple loop 
+; S var preset (32 (space))
+; trace on 
+; -------------------------
+TRC
+B = 0
+.LOOP
+B = B + 1
+PRN B S
+IF B < 5 JMP .LOOP

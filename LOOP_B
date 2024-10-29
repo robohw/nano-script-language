@@ -1,0 +1,11 @@
+; simple loop 
+; T var preset (10 (LineFeed))
+; trace on
+; Syntactic sugar : B + equal B = B + 1 
+; -------------------------
+TRC
+B = 0
+.LOOP
+B + 
+PRN B T
+IF B < 5 JMP .LOOP
