@@ -1,15 +1,5 @@
-program nano6; // 24.10.28 v1.1 FINAL - KeyWords: INP, IF, JMP, RET, PRN, TRC  
+program nano;  // 24.10.28 v1.1 FINAL - KeyWords: INP, IF, JMP, RET, PRN, TRC  
 {$MODE FPC}    // RET re-implanted, Arr.limit = 32767, 
-               // CHAR - S .. T,  STRING - U..Z 
-               // Vars:    A ARRAY    1
-               //       B..Q longINT 16
-               //          R random   1 
-               //        S,T char     2
-               //       U..Z string   6 
-
-               // USAGE: compile nano.pas (freepascal) to nano.exe  
-               // Type nano.exe your_script [ENTER]
-               // the result: your_script.out 
  uses SysUtils;  
      
  type                            // Proto, for LABELs. 
@@ -23,7 +13,7 @@ program nano6; // 24.10.28 v1.1 FINAL - KeyWords: INP, IF, JMP, RET, PRN, TRC
  CNTMAX = 2000000;               // avoid infinitive loops
 
  var {global}
-   Code   : array of string;     // TEMP of the runnable nano7 code. Max. 65535 lines
+   Code   : array of string;     // TEMP of the runnable nano code. Max. 65535 lines
    tokens : array of string;     // TEMP of the running line content, in tokenised form
    Labels : array of TLabel;     // list of labels
    Vars   : array['B'..'R'] of LongInt;
@@ -34,7 +24,7 @@ program nano6; // 24.10.28 v1.1 FINAL - KeyWords: INP, IF, JMP, RET, PRN, TRC
    Stack  : Word = 0;            // pseudo stack (for RET(urn))
    Trace  : Boolean = False;     // Tracer, default OFF 
    Counter: LongInt = 0;         // loop counter for ENDLESS loops 
-   InFile,OutFile : text;        // incoming (nano7 script) outgoing (result file)
+   InFile,OutFile : text;        // incoming (nano script) outgoing (result file)
  
  procedure Error(const Msg: string);
  begin
@@ -44,41 +34,37 @@ program nano6; // 24.10.28 v1.1 FINAL - KeyWords: INP, IF, JMP, RET, PRN, TRC
    Halt(1);
  end;
 
-// ------------------------------------------ 
-procedure Split(Line: string);
-var
-  i: Integer;
-  InQuotes: Boolean;
-  Curr: string;
-begin
-  SetLength(Tokens, 0);
-  InQuotes := False;
-  Curr := '';
-
-  for i := 1 to Length(Line) do
-  begin
-    if Line[i] = '"' then InQuotes := not InQuotes;
-    if (Line[i] = ' ') and not InQuotes then
-    begin
-      if Curr <> '' then
-      begin
-        SetLength(Tokens, Length(Tokens) + 1);
-        Tokens[High(Tokens)] := Curr;
-        Curr := '';
-      end;
-    end
-    else Curr := Curr + Line[i];
-  end;
-
-  if Curr <> '' then
-  begin
-    SetLength(Tokens, Length(Tokens) + 1);
-    Tokens[High(Tokens)] := Curr;
-  end;
-end;
+ procedure Split(Line: string); // split a line to token(s)
+ var
+   i: Integer;
+   InQuotes: Boolean;
+   Curr: string;
+ begin
+   SetLength(Tokens, 0);
+   InQuotes := False;
+   Curr := '';
+   for i := 1 to Length(Line) do
+   begin
+     if Line[i] = '"' then InQuotes := not InQuotes;
+     if (Line[i] = ' ') and not InQuotes then
+     begin
+       if Curr <> '' then
+       begin
+         SetLength(Tokens, Length(Tokens) + 1);
+         Tokens[High(Tokens)] := Curr;
+         Curr := '';
+       end;
+     end
+     else Curr := Curr + Line[i];
+   end;
+   if Curr <> '' then
+   begin
+     SetLength(Tokens, Length(Tokens) + 1);
+     Tokens[High(Tokens)] := Curr;
+   end;
+ end;
  
- // SET a LABEL and its ADDRESS
- procedure SetLabelAddr(const Name: string; Addr: Word);
+ procedure SetLabelAddr(const Name: string; Addr: Word); // SET a LABEL and its ADDRESS
  var
    i: Integer;
  begin
@@ -91,8 +77,7 @@ end;
    Labels[High(Labels)].Addr := Addr;
  end;
  
- // GET the ADDRESS of a LABEL
- function GetLabelAddr(const Name: string): Word;
+ function GetLabelAddr(const Name: string): Word; // GET the ADDRESS of a LABEL
  var
    i: Integer;
  begin
@@ -121,17 +106,15 @@ end;
    GetIndex := i;
  end;
 
- // GET VARIABLE VALUE
- function GetVal(n: Byte): LongInt;
+ function GetVal(n: Byte): LongInt;   // GET VALUE of a VAR
  var
    i: LongInt;
  begin   
-   if (tokens[n][1] in ['B'..'Z']) and (Length(tokens[n])>1)then Error('Invalid ID: '+tokens[n]);
+   if (tokens[n][1] in ['B'..'Z'])and(Length(tokens[n])>1)then Error('Invalid ID: '+tokens[n]);
    if (tokens[n][1] in ['-','0'..'9']) then
        if not TryStrToInt(tokens[n],i) then Error('Invalid numeric value ' + tokens[n]);  
    if (tokens[n][1] = 'A') and ((Length(tokens[n])< 3) or (tokens[n][2] <> '.')) then
-       Error('invalid A.index: '+tokens[n]);
- 
+       Error('invalid A.index: '+tokens[n]); 
    case tokens[n][1] of
      'B'..'Q': Exit(Vars[tokens[n][1]]); 
      'S','T' : Exit(Varb[tokens[n][1]]);
@@ -143,14 +126,10 @@ end;
    end; // case
  end;
  
- function GetSVal(n: Byte): string;
+ function GetSVal(n: Byte): string;  // GET STRING VALUE of a VAR
  begin
    if (tokens[n][1] in ['U'..'Z']) and (Length(tokens[n])>1)then Error('Invalid ID: '+tokens[n]);
-    if (tokens[n][1] in ['U'..'Z']) then  
-   case tokens[n][1] of
-   'U'..'Z': Exit(Varstr[tokens[n][1]]);
-   end // case
-   else
+    if (tokens[n][1] in ['U'..'Z']) then Exit(Varstr[tokens[n][1]]) else
       GetSval:= tokens[n]; 
  end;
  
@@ -167,8 +146,7 @@ end;
    end;
  end; 
 
- // INPUT
- function Input(n: byte): longint;
+ function Input(n: byte): longint;   // INPUT
  var
  inStr: string;
  begin
@@ -179,8 +157,7 @@ end;
    until Trystrtoint(inStr,Input);
  end;
  
- // SET VARIABLE VALUE
- procedure SetVal(n: Byte);
+ procedure SetVal(n: Byte);   // SET VARIABLE VALUE
  var
   value: LongInt;
   SValue: string;
@@ -188,17 +165,14 @@ end;
  begin
   if not (tokens[n][1]   in ['A'..'Z'])    then Error('Invalid var ID: ' + tokens[n]);
   if not (tokens[n+1][1] in ['=','+','-']) then Error('syntax error: ' + tokens[n+1]);
-  if (tokens[n+1] = '=') and (length(tokens) < 3) then error('missing value/var ID');  
- 
+  if (tokens[n+1] = '=') and (length(tokens) < 3) then error('missing value/var ID');   
   if tokens[n+2] = 'INP' then Value := Input(n) else 
   if tokens[n+1] = '+'   then value := GetVal(n) + 1 else 
-  if tokens[n+1] = '-'   then value := GetVal(n) - 1
-  else
+  if tokens[n+1] = '-'   then value := GetVal(n) - 1  else
   begin
   if (tokens[n][1] in ['U'..'Z']) then 
   begin
-   case Length(tokens) of
-      3, 7: SValue := GetSVal(n + 2);
+   case Length(tokens) of 3, 7: SValue := GetSVal(n + 2);
     else
       Error('Invalid (sLET) syntax');
     end;  // case
@@ -223,26 +197,29 @@ end;
   if (tokens[n][1] in ['U'..'Z']) then Varstr[tokens[n][1]] := SValue;  
  end;
 
- // --- PRN ------------------------------------------------------- 
- procedure Printer(n: byte);
+ procedure Printer(n: byte);  // --- PRN ------------------------------------ 
  var i: longInt; 
      Tmp: string;  
  begin
  for i := n to High(tokens) do
-     if tokens[i][1] = 'A' then Write(OutFile,Ar[ExtractIndex(tokens[i])])  
-     else
+     if tokens[i][1] = 'A' then Write(OutFile,Ar[ExtractIndex(tokens[i])])else
      if tokens[i][1] in ['B'..'R'] then Write(OutFile,Vars[tokens[i][1]]) else
      if tokens[i][1] in ['U'..'Z'] then 
      begin
      Tmp := Varstr[tokens[i][1]];
      Tmp := copy(Tmp,2,length(Tmp)-2);
      Write(OutFile,Tmp)
-     end     
-     else Write(OutFile,Chr(Varb[tokens[i][1]]));
+     end else 
+     Write(OutFile,Chr(Varb[tokens[i][1]]));
  end;
  
- // EXECUTE a line
- procedure ExecuteMe;
+ procedure Jumper(n: byte); // For JMP
+ begin
+   Stack   := linenum;   
+   LineNum := GetLabelAddr(tokens[n]); 
+ end;
+ 
+ procedure ExecuteMe;   // EXECUTE a line
  begin
    LineNum := 1;
    while (LineNum <= High(Code)) do
@@ -258,20 +235,14 @@ end;
                 ((tokens[2][1]='=') and (GetVal(1) = GetVal(3))) then
               begin
                 case tokens[4] of
-                  'JMP': begin
-                           Stack   := linenum;   
-                           LineNum := GetLabelAddr(tokens[5]);
-                         end;
+                  'JMP': Jumper(5);
                   'PRN': Printer(5);
                   'RET': if Stack = 0 then Error('No return(R)') else LineNum := Stack;
                   else SetVal(4);
                 end; // case
               end; // if
             end; // 'IF:'
-       'JMP': begin
-                Stack   := linenum;   
-                LineNum := GetLabelAddr(tokens[1]);
-              end;
+       'JMP': Jumper(1);
        'RET': if Stack = 0 then Error('No return address found') else LineNum := Stack;
        'NOP': ; // No operation
        'PRN': Printer(1);
@@ -280,24 +251,27 @@ end;
      if Counter > CNTMAX then Error('infinite loop detected') else Inc(Counter);
    end;
  end;
-
- procedure LoadProgram;
+ 
+ procedure Init; 
  var
    i: byte;
-   Line: string;
  begin
    for i:= Ord('B') to Ord('Q') do vars[Chr(i)]:= -2147483648;  // int
    for i:= Ord('U') to Ord('Z') do varstr[Chr(i)]:= '.';        // string
-   varb['S'] := 32; varb['T'] := 10;                            // char
-   
+   varb['S'] := 32; varb['T'] := 10;                            // char   
    Randomize;
-   Vars['R'] := 100; // Range for random numbers: 0..99
-   
-   SetLength(Code, 1);
+   Vars['R'] := 100;           // Range for random numbers: 0..99   
+   SetLength(Code, 0);
    SetLength(Labels, 0);
-   SetLength(Ar, 1);
-   LineNum := 0;
-   
+   SetLength(Ar, 1); 
+ end;
+
+ procedure LoadProgram;  // load a script 
+ var 
+  line: string;
+ begin 
+   init;
+   LineNum := 0;   
    while not Eof(InFile) do
    begin
      ReadLn(InFile,Line);
@@ -325,20 +299,17 @@ end;
      if i < 10 then Writeln(OutFile,' ',i,'  ', Code[i]) else Writeln(OutFile,i,'  ', Code[i]);
    if Length(Labels) > 0 then
    begin
-     Writeln(OutFile);
-     Writeln(OutFile,'-------------- Label(s):');
+     Writeln(OutFile); Writeln(OutFile,'-------------- Label(s):');
      for i := 0 to length(Labels)-1 do Writeln(OutFile,Labels[i].Name, #9, Labels[i].Addr);
    end;  
-   Writeln(OutFile);
-   Writeln(OutFile,'-------------- Vars (B..Z):');
+   Writeln(OutFile); Writeln(OutFile,'-------------- Vars (B..Z):');
    for i := Ord('B') to Ord('R') do
        if Vars[Chr(i)] > -2147483648 then Writeln(OutFile,Chr(i), ' ', Vars[Chr(i)]); 
        Writeln(OutFile,'S', ' ', Varb['S']); 
        Writeln(OutFile,'T', ' ', Varb['T']); 
    for i := Ord('U') to Ord('Z') do
-       if Varstr[Chr(i)] <> '.' then Writeln(OutFile,Chr(i), ' ', Varstr[Chr(i)]); 
-        
-   Writeln(OutFile,'-------------- Array element(s):');
+       if Varstr[Chr(i)] <> '.' then Writeln(OutFile,Chr(i), ' ', Varstr[Chr(i)]);         
+   writeln(outfile); Writeln(OutFile,'-------------- Array element(s):');
    for i := 0 to length(Ar)-1 do Writeln(OutFile,'A.', i, ' = ', Ar[i]);
  end;
  
@@ -352,8 +323,7 @@ end;
    end   
    else 
    begin
-    writeln(' no input file. Try: nano.exe your_script');
-    halt(1); 
+    writeln(' no input file. Try: nano.exe your_script'); halt(1); 
    end;
     
    LoadProgram;  
